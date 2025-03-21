@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todo列表</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #3a4a6d;
+            font-size: 2.5rem;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 25px;
+        }
+        .input-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e1e5ee;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        input:focus {
+            outline: none;
+            border-color: #7e57c2;
+            box-shadow: 0 0 0 3px rgba(126, 87, 194, 0.2);
+        }
+        button {
+            padding: 12px 20px;
+            background-color: #7e57c2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background-color: #6a3cb5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .todo-section, .completed-section {
+            border: 1px solid #e1e5ee;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #fafbfd;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        h2 {
+            margin-bottom: 15px;
+            border-bottom: 2px solid #e1e5ee;
+            padding-bottom: 10px;
+            color: #3a4a6d;
+            font-size: 1.5rem;
+        }
+        ul {
+            list-style-type: none;
+        }
+        li {
+            padding: 15px;
+            border-bottom: 1px solid #e1e5ee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+            border-radius: 4px;
+        }
+        li:hover {
+            background-color: #f0f2f7;
+        }
+        li:last-child {
+            border-bottom: none;
+        }
+        .delete-btn {
+            background-color: #ff5252;
+        }
+        .delete-btn:hover {
+            background-color: #e03e3e;
+        }
+        .complete-btn {
+            background-color: #4caf50;
+            margin-right: 8px;
+        }
+        .complete-btn:hover {
+            background-color: #3d8b40;
+        }
+        .todo-section {
+            border-left: 4px solid #7e57c2;
+        }
+        .completed-section {
+            border-left: 4px solid #4caf50;
+        }
+        .completed-section li {
+            color: #666;
+            text-decoration: line-through;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <h1>我的待办事项</h1>
+    <div class="container">
+        <div class="input-section">
+            <input type="text" id="todoInput" placeholder="请输入待办事项...">
+            <button id="addBtn">添加</button>
+        </div>
+        
+        <div class="todo-section">
+            <h2>待办事项</h2>
+            <ul id="todoList"></ul>
+        </div>
+        
+        <div class="completed-section">
+            <h2>已完成</h2>
+            <ul id="completedList"></ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const todoInput = document.getElementById('todoInput');
+            const addBtn = document.getElementById('addBtn');
+            const todoList = document.getElementById('todoList');
+            const completedList = document.getElementById('completedList');
+            
+            // 从本地存储加载数据
+            let todos = JSON.parse(localStorage.getItem('todos')) || [];
+            let completed = JSON.parse(localStorage.getItem('completed')) || [];
+            
+            // 渲染列表
+            function renderLists() {
+                todoList.innerHTML = '';
+                completedList.innerHTML = '';
+                
+                todos.forEach((todo, index) => {
+                    const li = document.createElement('li');
+                    li.textContent = todo;
+                    
+                    const btnGroup = document.createElement('div');
+                    
+                    const completeBtn = document.createElement('button');
+                    completeBtn.textContent = '完成';
+                    completeBtn.classList.add('complete-btn');
+                    completeBtn.addEventListener('click', () => completeTodo(index));
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = '删除';
+                    deleteBtn.classList.add('delete-btn');
+                    deleteBtn.addEventListener('click', () => deleteTodo(index));
+                    
+                    btnGroup.appendChild(completeBtn);
+                    btnGroup.appendChild(deleteBtn);
+                    li.appendChild(btnGroup);
+                    todoList.appendChild(li);
+                });
+                
+                completed.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = '删除';
+                    deleteBtn.classList.add('delete-btn');
+                    deleteBtn.addEventListener('click', () => deleteCompleted(index));
+                    
+                    li.appendChild(deleteBtn);
+                    completedList.appendChild(li);
+                });
+                
+                // 保存到本地存储
+                localStorage.setItem('todos', JSON.stringify(todos));
+                localStorage.setItem('completed', JSON.stringify(completed));
+            }
+            
+            // 添加新的待办事项
+            function addTodo() {
+                const todoText = todoInput.value.trim();
+                if (todoText) {
+                    todos.push(todoText);
+                    todoInput.value = '';
+                    renderLists();
+                }
+            }
+            
+            // 完成待办事项
+            function completeTodo(index) {
+                const completedTodo = todos.splice(index, 1)[0];
+                completed.push(completedTodo);
+                renderLists();
+            }
+            
+            // 删除待办事项
+            function deleteTodo(index) {
+                todos.splice(index, 1);
+                renderLists();
+            }
+            
+            // 删除已完成事项
+            function deleteCompleted(index) {
+                completed.splice(index, 1);
+                renderLists();
+            }
+            
+            // 事件监听
+            addBtn.addEventListener('click', addTodo);
+            
+            todoInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addTodo();
+                }
+            });
+            
+            // 初始渲染
+            renderLists();
+        });
+    </script>
+</body>
+</html> 
